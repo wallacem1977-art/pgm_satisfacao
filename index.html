@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Satisfação do Cidadão | Dívida Ativa - PGM São João de Meriti</title>
+  
+  <!-- SEO & Metadados -->
+  <meta name="description" content="Sistema de Pesquisa de Satisfação e Monitoramento de Indicadores (KPIs) do Setor de Dívida Ativa da Procuradoria Geral do Município de São João de Meriti.">
+  <meta name="author" content="Procuradoria Geral do Município de São João de Meriti - Dívida Ativa">
+  <link rel="icon" type="image/png" href="logo_sjm.png">
+
+  <!-- Fontes Google (Inter e Outfit) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome para Ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Estilos Customizados -->
+  <link rel="stylesheet" href="style.css?v=4.4">
+  <script>
+    window.__appErrors = [];
+    window.onerror = function(msg, url, line, col, err) {
+      window.__appErrors.push(msg + " (linha " + line + ")");
+      if (document.body) document.body.setAttribute('data-app-error', window.__appErrors.join(' | '));
+    };
+  </script>
+</head>
+<body class="theme-light user-cidadao" id="appBody">
+
+  <!-- CABEÇALHO GLOBAL -->
+  <header class="app-header" id="mainHeader">
+    <div class="header-container">
+      <div class="brand-area">
+        <img src="logo_sjm.png" alt="Brasão São João de Meriti" class="brand-logo" id="headerLogo">
+        <div class="brand-text">
+          <span class="sub-title">PREFEITURA DE SÃO JOÃO DE MERITI</span>
+          <h1 class="main-title">Procuradoria Geral • Dívida Ativa</h1>
+          <span class="system-badge"><i class="fa-solid fa-chart-line"></i> Monitoramento de CX & Gestão de Qualidade</span>
+        </div>
+      </div>
+
+      <nav class="nav-modes" id="navModes">
+        <button type="button" class="nav-btn active" id="btnModeTotem" onclick="App.switchView('totem')">
+          <i class="fa-solid fa-desktop"></i>
+          <span>Totem Cidadão</span>
+        </button>
+        <button type="button" class="nav-btn" id="btnModeDashboard" onclick="App.switchView('dashboard')">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>Painel de KPIs</span>
+          <i class="fa-solid fa-lock nav-lock-icon" id="lockDashboard" title="Acesso Restrito: Gestor ou Administrador"></i>
+        </button>
+        <button type="button" class="nav-btn" id="btnModeRelatorio" onclick="App.switchView('relatorio')">
+          <i class="fa-solid fa-file-invoice"></i>
+          <span>Relatório Executivo</span>
+          <i class="fa-solid fa-lock nav-lock-icon" id="lockRelatorio" title="Acesso Restrito: Gestor ou Administrador"></i>
+        </button>
+        <button type="button" class="nav-btn" id="btnModeCadastros" onclick="App.switchView('cadastros')">
+          <i class="fa-solid fa-address-book"></i>
+          <span>Cadastros</span>
+          <i class="fa-solid fa-lock nav-lock-icon" id="lockCadastros" title="Acesso Exclusivo: Administrador"></i>
+        </button>
+        <button type="button" class="nav-btn" id="btnModeConfig" onclick="App.switchView('config')">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Configurações</span>
+          <i class="fa-solid fa-lock nav-lock-icon" id="lockConfig" title="Acesso Exclusivo: Administrador"></i>
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <!-- ÁREA DE AUTENTICAÇÃO / PERFIL -->
+        <div class="auth-status-container" id="authStatusContainer">
+          <button type="button" class="btn-auth-login" onclick="App.openLoginModal()" title="Acessar Área Restrita (Gestor/Admin)">
+            <i class="fa-solid fa-lock"></i>
+            <span>Acesso Restrito</span>
+          </button>
+        </div>
+
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" onclick="App.toggleTheme()" title="Alternar tema Claro/Escuro" aria-label="Alternar tema Claro ou Escuro">
+          <i class="fa-solid fa-moon"></i>
+          <span class="theme-toggle-label">Modo Escuro</span>
+        </button>
+        <div class="connection-status" id="connectionBadge" title="Status da Conexão com Google Sheets">
+          <span class="status-dot online"></span>
+          <span class="status-text">Online</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NOTIFICAÇÕES TOAST -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="main-content">
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: TOTEM DE SATISFAÇÃO DO CIDADÃO    -->
+    <!-- ========================================== -->
+    <section class="view-section active" id="viewTotem">
+      <div class="totem-card">
+        
+        <!-- Barra de Progresso da Pesquisa -->
+        <div class="progress-bar-container">
+          <div class="progress-info">
+            <span id="stepIndicatorText">Etapa 1 de 5</span>
+            <span class="time-estimate"><i class="fa-regular fa-clock"></i> Leva menos de 1 minuto</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width: 20%;"></div>
+          </div>
+        </div>
+
+        <!-- Dados Obrigatórios do Atendimento -->
+        <div class="attendance-meta-bar" id="attendanceMetaBar">
+          <div class="meta-item">
+            <label for="selectAtendente">
+              <i class="fa-solid fa-user-tie"></i> Atendente / Servidor:
+              <span class="required-indicator" title="Campo obrigatório">*</span>
+            </label>
+            <select id="selectAtendente" class="meta-select" onchange="App.onMetaChange()" required>
+              <option value="" disabled selected>-- Carregando Atendentes da Planilha... --</option>
+            </select>
+          </div>
+
+          <div class="meta-item">
+            <label for="selectTipoServico">
+              <i class="fa-solid fa-folder-open"></i> Assunto Principal:
+              <span class="required-indicator" title="Campo obrigatório">*</span>
+            </label>
+            <select id="selectTipoServico" class="meta-select" onchange="App.onMetaChange()" required>
+              <option value="" disabled selected>-- Carregando Assuntos da Planilha... --</option>
+            </select>
+          </div>
+        </div>
+
+        <form id="surveyForm" onsubmit="event.preventDefault();">
+          
+          <!-- ETAPA 1: AVALIAÇÃO GERAL (CSAT) -->
+          <div class="survey-step active" id="step1">
+            <div class="step-header">
+              <span class="step-badge">1. Avaliação Geral • CSAT</span>
+              <h2 class="step-question">Em uma escala de 1 a 5, como você avalia a <strong>qualidade geral do atendimento</strong> recebido hoje no setor de Dívida Ativa?</h2>
+              <p class="step-desc">Sua nota é fundamental para aprimorarmos continuamente os serviços prestados pela Procuradoria ao cidadão de São João de Meriti.</p>
+            </div>
+
+            <div class="rating-scale csat-scale" id="scaleQ1">
+              <button type="button" class="rating-btn csat-btn" data-value="1" onclick="App.selectCSAT(1)">
+                <span class="emoji">😠</span>
+                <span class="score-num">1</span>
+                <span class="label">Muito Insatisfeito</span>
+              </button>
+              <button type="button" class="rating-btn csat-btn" data-value="2" onclick="App.selectCSAT(2)">
+                <span class="emoji">🙁</span>
+                <span class="score-num">2</span>
+                <span class="label">Insatisfeito</span>
+              </button>
+              <button type="button" class="rating-btn csat-btn" data-value="3" onclick="App.selectCSAT(3)">
+                <span class="emoji">😐</span>
+                <span class="score-num">3</span>
+                <span class="label">Regular</span>
+              </button>
+              <button type="button" class="rating-btn csat-btn" data-value="4" onclick="App.selectCSAT(4)">
+                <span class="emoji">😊</span>
+                <span class="score-num">4</span>
+                <span class="label">Satisfeito</span>
+              </button>
+              <button type="button" class="rating-btn csat-btn" data-value="5" onclick="App.selectCSAT(5)">
+                <span class="emoji">🤩</span>
+                <span class="score-num">5</span>
+                <span class="label">Muito Satisfeito</span>
+              </button>
+            </div>
+            
+            <input type="hidden" id="answerQ1" value="">
+          </div>
+
+          <!-- ETAPA 2: RESOLUTIVIDADE (FCR) -->
+          <div class="survey-step" id="step2">
+            <div class="step-header">
+              <span class="step-badge">2. Resolutividade • FCR</span>
+              <h2 class="step-question">O motivo da sua ida à Dívida Ativa (acordos, emissão de guias, dúvidas processuais) foi <strong>resolvido neste atendimento</strong>?</h2>
+              <p class="step-desc">Ajuda nossa equipe a medir a capacidade de resolução no primeiro contato, evitando filas e retrabalho.</p>
+            </div>
+
+            <div class="options-grid fcr-grid" id="gridQ2">
+              <button type="button" class="choice-card choice-success" data-value="Sim, totalmente" onclick="App.selectFCR('Sim, totalmente')">
+                <div class="icon-circle"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="choice-text">
+                  <h3>Sim, totalmente</h3>
+                  <p>Saí com meu problema, guia ou acordo resolvido por completo.</p>
+                </div>
+              </button>
+
+              <button type="button" class="choice-card choice-warning" data-value="Parcialmente" onclick="App.selectFCR('Parcialmente')">
+                <div class="icon-circle"><i class="fa-solid fa-circle-half-stroke"></i></div>
+                <div class="choice-text">
+                  <h3>Parcialmente</h3>
+                  <p>Resolvi parte do que precisava, mas ainda precisarei de novo contato.</p>
+                </div>
+              </button>
+
+              <button type="button" class="choice-card choice-danger" data-value="Não" onclick="App.selectFCR('Não')">
+                <div class="icon-circle"><i class="fa-solid fa-circle-xmark"></i></div>
+                <div class="choice-text">
+                  <h3>Não</h3>
+                  <p>Não consegui solucionar minha demanda no dia de hoje.</p>
+                </div>
+              </button>
+            </div>
+
+            <input type="hidden" id="answerQ2" value="">
+          </div>
+
+          <!-- ETAPA 3: CLAREZA E TRANSPARÊNCIA (ARRECADAÇÃO E COMUNICAÇÃO) -->
+          <div class="survey-step" id="step3">
+            <div class="step-header">
+              <span class="step-badge">3. Clareza e Transparência Jurídica</span>
+              <h2 class="step-question">As explicações fornecidas pelo atendente sobre os <strong>seus débitos e as opções de parcelamento</strong> foram claras e fáceis de entender?</h2>
+              <p class="step-desc">Mede a transparência tributária e a facilidade do cidadão em compreender direitos, encargos e opções de pagamento.</p>
+            </div>
+
+            <div class="rating-scale clarity-scale" id="scaleQ3">
+              <button type="button" class="rating-btn clarity-btn" data-value="1" onclick="App.selectClarity(1)">
+                <span class="icon-box"><i class="fa-regular fa-face-frown-open"></i></span>
+                <span class="score-num">1</span>
+                <span class="label">Nada claras</span>
+              </button>
+              <button type="button" class="rating-btn clarity-btn" data-value="2" onclick="App.selectClarity(2)">
+                <span class="icon-box"><i class="fa-regular fa-face-meh-blank"></i></span>
+                <span class="score-num">2</span>
+                <span class="label">Pouco claras</span>
+              </button>
+              <button type="button" class="rating-btn clarity-btn" data-value="3" onclick="App.selectClarity(3)">
+                <span class="icon-box"><i class="fa-regular fa-face-meh"></i></span>
+                <span class="score-num">3</span>
+                <span class="label">Razoáveis</span>
+              </button>
+              <button type="button" class="rating-btn clarity-btn" data-value="4" onclick="App.selectClarity(4)">
+                <span class="icon-box"><i class="fa-regular fa-face-smile"></i></span>
+                <span class="score-num">4</span>
+                <span class="label">Claras</span>
+              </button>
+              <button type="button" class="rating-btn clarity-btn" data-value="5" onclick="App.selectClarity(5)">
+                <span class="icon-box"><i class="fa-regular fa-face-laugh-beam"></i></span>
+                <span class="score-num">5</span>
+                <span class="label">Muito claras</span>
+              </button>
+            </div>
+
+            <input type="hidden" id="answerQ3" value="">
+          </div>
+
+          <!-- ETAPA 4: AGILIDADE E FILA (LOGÍSTICA & FLUXO) -->
+          <div class="survey-step" id="step4">
+            <div class="step-header">
+              <span class="step-badge">4. Agilidade e Tempo • Logística de Atendimento</span>
+              <h2 class="step-question">Como você avalia o <strong>tempo total do seu atendimento</strong>, desde a retirada da senha/chegada até a conclusão do caso?</h2>
+              <p class="step-desc">Indicador essencial para dimensionar nossa equipe, otimizar filas e aprimorar a triagem de processos.</p>
+            </div>
+
+            <div class="options-grid agility-grid" id="gridQ4">
+              <button type="button" class="choice-card choice-fast" data-value="Muito Rápido" onclick="App.selectAgility('Muito Rápido')">
+                <div class="icon-circle"><i class="fa-solid fa-bolt"></i></div>
+                <div class="choice-text">
+                  <h3>Muito Rápido</h3>
+                  <p>Fui chamado e atendido em tempo recorde.</p>
+                </div>
+              </button>
+
+              <button type="button" class="choice-card choice-adequate" data-value="Adequado" onclick="App.selectAgility('Adequado')">
+                <div class="icon-circle"><i class="fa-regular fa-thumbs-up"></i></div>
+                <div class="choice-text">
+                  <h3>Adequado</h3>
+                  <p>O tempo de espera e atendimento foi razoável e esperado.</p>
+                </div>
+              </button>
+
+              <button type="button" class="choice-card choice-slow" data-value="Demorado" onclick="App.selectAgility('Demorado')">
+                <div class="icon-circle"><i class="fa-regular fa-clock"></i></div>
+                <div class="choice-text">
+                  <h3>Demorado</h3>
+                  <p>A espera ou a tramitação demorou mais que o desejável.</p>
+                </div>
+              </button>
+
+              <button type="button" class="choice-card choice-veryslow" data-value="Muito Demorado" onclick="App.selectAgility('Muito Demorado')">
+                <div class="icon-circle"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="choice-text">
+                  <h3>Muito Demorado</h3>
+                  <p>Tempo excessivo de espera ou de finalização.</p>
+                </div>
+              </button>
+            </div>
+
+            <input type="hidden" id="answerQ4" value="">
+          </div>
+
+          <!-- ETAPA 5: EXPERIÊNCIA E SUGESTÕES (CAMPO ABERTO & ANÁLISE DE SENTIMENTO) -->
+          <div class="survey-step" id="step5">
+            <div class="step-header">
+              <span class="step-badge">5. Experiência e Sugestões • Voz do Cidadão</span>
+              <h2 class="step-question">Em poucas palavras, como foi a sua <strong>experiência com a nossa equipe hoje</strong>?</h2>
+              <p class="step-desc">Use este espaço para deixar sugestões de melhoria, críticas construtivas ou elogios aos servidores.</p>
+            </div>
+
+            <!-- Sugestões Rápidas / Tags de Clique -->
+            <div class="quick-tags-container">
+              <span class="tags-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Sugestões rápidas:</span>
+              <div class="quick-tags">
+                <button type="button" class="tag-chip" onclick="App.appendQuickTag('Atendente muito atencioso e educado')">Atendente atencioso</button>
+                <button type="button" class="tag-chip" onclick="App.appendQuickTag('Atendimento muito rápido e eficiente')">Muito rápido</button>
+                <button type="button" class="tag-chip" onclick="App.appendQuickTag('Explicou muito bem as parcelas do acordo')">Boa explicação</button>
+                <button type="button" class="tag-chip" onclick="App.appendQuickTag('Precisa diminuir o tempo de espera na fila')">Melhorar tempo de fila</button>
+                <button type="button" class="tag-chip" onclick="App.appendQuickTag('Mais computadores e funcionários no setor')">Mais funcionários</button>
+                <button type="button" class="tag-chip" onclick="App.appendQuickTag('Ambiente agradável e organizado')">Ambiente organizado</button>
+              </div>
+            </div>
+
+            <div class="comment-box-area">
+              <textarea id="commentText" class="comment-textarea" placeholder="Digite aqui sua mensagem (opcional, porém muito valiosa para nós)..." rows="4" maxlength="500" oninput="App.onCommentInput()"></textarea>
+              <div class="comment-footer">
+                <span class="char-count" id="charCount">0 / 500 caracteres</span>
+                <span class="privacy-note"><i class="fa-solid fa-lock"></i> Sua avaliação é anônima e auditada pelo controle interno.</span>
+              </div>
+            </div>
+
+            <div class="submit-action-area">
+              <button type="button" class="btn-submit-survey" id="btnSubmitSurvey" onclick="App.submitSurvey()">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Finalizar Avaliação</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ETAPA FINAL: SUCESSO E AGRADECIMENTO -->
+          <div class="survey-step step-success" id="stepSuccess">
+            <div class="success-icon-wrap">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h2 class="success-title">Muito obrigado pela sua avaliação!</h2>
+            <p class="success-message">A Procuradoria Geral do Município de São João de Meriti agradece sua contribuição para construirmos uma gestão pública mais humana, transparente e eficiente.</p>
+            
+            <div class="success-protocol">
+              <span class="protocol-label">Protocolo de Registro de CX:</span>
+              <strong class="protocol-code" id="registeredProtocol">SJM-DA-2026-000000</strong>
+            </div>
+
+            <div class="auto-reset-indicator">
+              <span>Esta tela retornará ao início em <strong id="resetCountdown">5</strong> segundos...</span>
+              <button type="button" class="btn-reset-now" onclick="App.resetSurvey()">Avaliar Novo Atendimento</button>
+            </div>
+          </div>
+
+        </form>
+
+        <!-- Navegação Inferior do Totem -->
+        <div class="survey-nav-footer" id="surveyNavFooter">
+          <button type="button" class="btn-step-nav btn-prev" id="btnPrevStep" onclick="App.prevStep()" disabled>
+            <i class="fa-solid fa-arrow-left"></i> Voltar
+          </button>
+
+          <button type="button" class="btn-step-nav btn-next" id="btnNextStep" onclick="App.nextStep()">
+            Avançar <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: PAINEL DE MONITORAMENTO DE KPIS    -->
+    <!-- ========================================== -->
+    <section class="view-section" id="viewDashboard">
+      
+      <!-- Barra Superior de Controle e Filtros -->
+      <div class="dashboard-filter-bar">
+        <div class="filter-group">
+          <span class="filter-label"><i class="fa-solid fa-filter"></i> Período:</span>
+          <select id="filterPeriodo" class="filter-select" onchange="App.applyFilters()">
+            <option value="all">Todo o Histórico</option>
+            <option value="today">Hoje</option>
+            <option value="7days" selected>Últimos 7 dias</option>
+            <option value="30days">Últimos 30 dias</option>
+            <option value="month">Este Mês</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label"><i class="fa-solid fa-user-tie"></i> Atendente / Servidor:</span>
+          <select id="filterAtendente" class="filter-select" onchange="App.applyFilters()">
+            <option value="all">Todos os Servidores</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label"><i class="fa-solid fa-tags"></i> Assunto:</span>
+          <select id="filterServico" class="filter-select" onchange="App.applyFilters()">
+            <option value="all">Todos os Assuntos</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button type="button" class="btn-dash-action" onclick="App.loadDataFromSheets()" title="Sincronizar com a planilha Google Sheets">
+            <i class="fa-solid fa-arrows-rotate"></i> Sincronizar Planilha
+          </button>
+          <button type="button" class="btn-dash-action btn-export-csv" onclick="App.exportToCSV()" title="Exportar dados para Excel/PowerBI">
+            <i class="fa-solid fa-file-csv"></i> Exportar CSV
+          </button>
+          <button type="button" class="btn-dash-action btn-print-pdf" onclick="App.printDashboardPDF()" title="Imprimir Painel de KPIs em PDF">
+            <i class="fa-solid fa-file-pdf"></i> Imprimir PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- CABEÇALHO EXCLUSIVO PARA IMPRESSÃO EM PDF DO PAINEL DE KPIS -->
+      <div class="dashboard-print-header" id="dashboardPrintHeader">
+        <div class="dash-print-top">
+          <img src="logo_sjm.png" alt="Brasão São João de Meriti" class="dash-print-logo">
+          <div class="dash-print-titles">
+            <h4 class="dash-print-prefeitura">ESTADO DO RIO DE JANEIRO • PREFEITURA DE SÃO JOÃO DE MERITI</h4>
+            <h2 class="dash-print-orgao">PROCURADORIA GERAL DO MUNICÍPIO</h2>
+            <h3 class="dash-print-setor">DEPARTAMENTO DE DÍVIDA ATIVA E COBRANÇA DA DÍVIDA PÚBLICA</h3>
+            <span class="dash-print-doc-title">PAINEL EXECUTIVO DE INDICADORES (KPIS) & GESTÃO DA QUALIDADE</span>
+          </div>
+        </div>
+        <div class="dash-print-meta-grid">
+          <div class="dash-print-meta-col">
+            <strong>Destinatários:</strong> Procurador-Geral, Prefeito e Gestores Operacionais<br>
+            <strong>Setor Responsável:</strong> Coordenação da Dívida Ativa • Qualidade CX<br>
+            <strong>Metodologia Aplicada:</strong> CSAT, FCR, Clarity Index & NLP Sentiment
+          </div>
+          <div class="dash-print-meta-col text-right">
+            <strong>Data da Emissão:</strong> <span id="dashPrintEmissionDate">--/--/----</span><br>
+            <strong>Período Filtrado:</strong> <span id="dashPrintFilterPeriodo">Últimos 7 dias</span><br>
+            <strong>Filtros Ativos:</strong> <span id="dashPrintFilterDetails">Todos os servidores • Todos os assuntos</span><br>
+            <strong>Amostragem:</strong> <span id="dashPrintSampleSize">0 avaliações computadas</span>
+          </div>
+        </div>
+        <div class="dash-print-divider"></div>
+      </div>
+
+      <!-- CARDS DE KPIS EXECUTIVOS -->
+      <div class="kpi-cards-grid">
+        
+        <!-- CARD KPI 1: CSAT -->
+        <div class="kpi-card card-csat" id="cardCSAT">
+          <div class="kpi-top">
+            <div class="kpi-badge"><i class="fa-solid fa-star"></i> CSAT • Satisfação Geral</div>
+            <span class="kpi-meta-tag" id="csatBenchmarkTag">Meta: ≥ 85%</span>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-main-val">
+              <span class="value" id="kpiCSATPercent">--%</span>
+              <span class="unit">aprovação</span>
+            </div>
+            <div class="kpi-sub-metric">
+              <span>Nota Média: <strong id="kpiCSATMedia">--</strong> / 5.0</span>
+              <span class="trend-badge positive" id="csatTrend"><i class="fa-solid fa-arrow-trend-up"></i> +4.2%</span>
+            </div>
+          </div>
+          <div class="kpi-footer-desc">
+            <i class="fa-solid fa-circle-info"></i> Percentual de notas 4 e 5 (Top-2 Box) sobre o total de avaliações.
+          </div>
+        </div>
+
+        <!-- CARD KPI 2: FCR -->
+        <div class="kpi-card card-fcr" id="cardFCR">
+          <div class="kpi-top">
+            <div class="kpi-badge"><i class="fa-solid fa-circle-check"></i> FCR • Resolutividade</div>
+            <span class="kpi-meta-tag">Meta: ≥ 80%</span>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-main-val">
+              <span class="value" id="kpiFCRPercent">--%</span>
+              <span class="unit">resolvido no 1º contato</span>
+            </div>
+            <div class="kpi-sub-metric">
+              <span>Parcial: <strong id="kpiFCRParcial">--%</strong> | Não: <strong id="kpiFCRNao">--%</strong></span>
+              <span class="trend-badge positive" id="fcrTrend"><i class="fa-solid fa-arrow-trend-up"></i> Eficiência</span>
+            </div>
+          </div>
+          <div class="kpi-footer-desc">
+            <i class="fa-solid fa-circle-info"></i> Evita retorno do cidadão à fila e retrabalho para o servidor.
+          </div>
+        </div>
+
+        <!-- CARD KPI 3: CLAREZA JURÍDICA -->
+        <div class="kpi-card card-clarity" id="cardClarity">
+          <div class="kpi-top">
+            <div class="kpi-badge"><i class="fa-solid fa-scale-balanced"></i> Transparência & Débitos</div>
+            <span class="kpi-meta-tag">Meta: ≥ 4.0 / 5</span>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-main-val">
+              <span class="value" id="kpiClarityMedia">--</span>
+              <span class="unit">de 5.0 estrelas</span>
+            </div>
+            <div class="kpi-sub-metric">
+              <span>Compreensão Clara: <strong id="kpiClarityPercent">--%</strong></span>
+              <span class="trend-badge positive"><i class="fa-solid fa-hand-holding-dollar"></i> Alta Adesão</span>
+            </div>
+          </div>
+          <div class="kpi-footer-desc">
+            <i class="fa-solid fa-circle-info"></i> Indicador chave para conversão de parcelamentos e arrecadação.
+          </div>
+        </div>
+
+        <!-- CARD KPI 4: AGILIDADE / FILA -->
+        <div class="kpi-card card-agility" id="cardAgility">
+          <div class="kpi-top">
+            <div class="kpi-badge"><i class="fa-solid fa-stopwatch"></i> Agilidade & Logística</div>
+            <span class="kpi-meta-tag">Meta: ≥ 75%</span>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-main-val">
+              <span class="value" id="kpiAgilityPercent">--%</span>
+              <span class="unit">tempo adequado/rápido</span>
+            </div>
+            <div class="kpi-sub-metric">
+              <span>Percepção Demorado: <strong id="kpiAgilityDemorado">--%</strong></span>
+              <span class="trend-badge neutral" id="agilityTrend"><i class="fa-solid fa-arrows-left-right"></i> Estável</span>
+            </div>
+          </div>
+          <div class="kpi-footer-desc">
+            <i class="fa-solid fa-circle-info"></i> Subsidia dimensionamento da equipe e avaliação da agilidade por servidor.
+          </div>
+        </div>
+
+        <!-- CARD TOTALIZADOR: VOLUME -->
+        <div class="kpi-card card-volume" id="cardVolume">
+          <div class="kpi-top">
+            <div class="kpi-badge"><i class="fa-solid fa-users"></i> Volume de Amostragem</div>
+            <span class="kpi-meta-tag">Auditoria CX</span>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-main-val">
+              <span class="value" id="kpiTotalRespostas">--</span>
+              <span class="unit">avaliações computadas</span>
+            </div>
+            <div class="kpi-sub-metric">
+              <span>Comentários: <strong id="kpiTotalComentarios">--</strong></span>
+              <span class="trend-badge info"><i class="fa-solid fa-check-double"></i> 100% Válidas</span>
+            </div>
+          </div>
+          <div class="kpi-footer-desc">
+            <i class="fa-solid fa-circle-info"></i> Base representativa para relatórios ao Procurador-Geral e Prefeito.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SEÇÃO DE GRÁFICOS VISUAIS E ANÁLISE QUANTITATIVA -->
+      <div class="analytics-grid">
+        
+        <!-- GRÁFICO 1: DISTRIBUIÇÃO CSAT (HISTOGRAMA 1 A 5) -->
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-chart-column"></i>
+              <h3>Distribuição de Notas CSAT (1 a 5)</h3>
+            </div>
+            <span class="panel-subtitle">Volume de respostas por nota atribuída</span>
+          </div>
+          <div class="panel-body">
+            <div class="custom-bar-chart" id="chartCSATDistribution">
+              <!-- Renderizado dinamicamente via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- GRÁFICO 2: RESOLUTIVIDADE (FCR) -->
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-chart-pie"></i>
+              <h3>Taxa de Resolutividade (FCR)</h3>
+            </div>
+            <span class="panel-subtitle">Capacidade de resolução no 1º contato</span>
+          </div>
+          <div class="panel-body">
+            <div class="donut-chart-container" id="chartFCRContainer">
+              <!-- Renderizado dinamicamente via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- GRÁFICO 3: PERCEPÇÃO DE AGILIDADE / TEMPO -->
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-hourglass-half"></i>
+              <h3>Percepção de Tempo de Espera e Fila</h3>
+            </div>
+            <span class="panel-subtitle">Diagnóstico operacional para dimensionamento</span>
+          </div>
+          <div class="panel-body">
+            <div class="horizontal-bars-container" id="chartAgilityContainer">
+              <!-- Renderizado dinamicamente via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- GRÁFICO 4: CLAREZA JURÍDICA E DE PARCELAMENTO -->
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-file-shield"></i>
+              <h3>Compreensão dos Débitos & Acordos</h3>
+            </div>
+            <span class="panel-subtitle">Índice de clareza das opções de parcelamento</span>
+          </div>
+          <div class="panel-body">
+            <div class="custom-bar-chart" id="chartClarityDistribution">
+              <!-- Renderizado dinamicamente via JS -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SEÇÃO DE INTELIGÊNCIA QUALITATIVA & TEXT ANALYTICS -->
+      <div class="qualitative-grid">
+        
+        <!-- NUVEM DE PALAVRAS E TERMOS CHAVE -->
+        <div class="wordcloud-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-cloud"></i>
+              <h3>Nuvem de Palavras • Termos Mais Citados</h3>
+            </div>
+            <span class="panel-subtitle">Extração algorítmica de palavras nos comentários do cidadão</span>
+          </div>
+          <div class="panel-body">
+            <div class="word-cloud-wrapper" id="wordCloudContainer">
+              <!-- Renderizado dinamicamente via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TERMÔMETRO DE SENTIMENTO -->
+        <div class="sentiment-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-heart-pulse"></i>
+              <h3>Análise de Sentimento dos Cidadãos</h3>
+            </div>
+            <span class="panel-subtitle">Classificação NLP de elogios, neutros e pontos de atenção</span>
+          </div>
+          <div class="panel-body">
+            <div class="sentiment-bars" id="sentimentBars">
+              <!-- Renderizado via JS -->
+            </div>
+            <div class="sentiment-summary-box" id="sentimentSummaryBox">
+              <!-- Resumo dinâmico -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FEED DE DEPOIMENTOS E AVALIAÇÕES RECENTES -->
+      <div class="comments-feed-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fa-solid fa-comments"></i>
+            <h3>Manifestações Recentes do Cidadão</h3>
+          </div>
+          <div class="feed-filters">
+            <select id="feedFilterSentiment" class="feed-select" onchange="App.filterCommentsFeed()">
+              <option value="all">Todos os Sentimentos</option>
+              <option value="Positivo">Apenas Elogios / Positivos</option>
+              <option value="Neutro">Apenas Neutros / Dúvidas</option>
+              <option value="Negativo">Apenas Pontos Críticos / Negativos</option>
+            </select>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="comments-stream" id="commentsStream">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PAINEL DE AVALIAÇÃO DE DESEMPENHO FUNCIONAL DOS SERVIDORES NO EXERCÍCIO DA FUNÇÃO -->
+      <div class="records-table-panel" style="margin-bottom: 24px;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fa-solid fa-id-badge"></i>
+            <div>
+              <h3 style="margin: 0; font-size: 1.05rem;">Avaliação de Desempenho Funcional por Servidor</h3>
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 2px;">Métricas individuais de qualidade, resolutividade e percepção do munícipe no exercício da função pública</span>
+            </div>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="servantsPerformanceTable">
+            <thead>
+              <tr>
+                <th>Servidor(a) / Atendente</th>
+                <th>Atendimentos</th>
+                <th>CSAT (Satisfação)</th>
+                <th>Resolutividade (FCR)</th>
+                <th>Clareza Tributária</th>
+                <th>Agilidade Percebida</th>
+                <th>Sentimento Cidadão</th>
+                <th>Conceito Funcional</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody id="servantsPerformanceTableBody">
+              <!-- Renderizado dinamicamente via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TABELA GERAL DE REGISTROS -->
+      <div class="records-table-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fa-solid fa-table-list"></i>
+            <h3>Log de Respostas e Auditoria de Dados</h3>
+          </div>
+          <div class="table-search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="tableSearchInput" placeholder="Buscar por protocolo, atendente, comentário..." oninput="App.searchTable()">
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="responsesTable">
+            <thead>
+              <tr>
+                <th>Protocolo</th>
+                <th>Data/Hora</th>
+                <th>Atendente / Servidor</th>
+                <th>Assunto</th>
+                <th>CSAT</th>
+                <th>FCR</th>
+                <th>Clareza</th>
+                <th>Agilidade</th>
+                <th>Sentimento</th>
+                <th>Comentário</th>
+              </tr>
+            </thead>
+            <tbody id="responsesTableBody">
+              <!-- Linhas renderizadas via JS -->
+            </tbody>
+          </table>
+        </div>
+        <div class="table-pagination" id="tablePagination">
+          <!-- Controle de páginas -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 3: RELATÓRIO EXECUTIVO OFICIAL (PDF)  -->
+    <!-- ========================================== -->
+    <section class="view-section" id="viewRelatorio">
+      <div class="report-controls-bar">
+        <button type="button" class="btn-print-report" onclick="window.print()">
+          <i class="fa-solid fa-print"></i> Imprimir / Salvar em PDF
+        </button>
+        <button type="button" class="btn-refresh-report" onclick="App.renderExecutiveReport()">
+          <i class="fa-solid fa-arrows-rotate"></i> Recalcular Relatório
+        </button>
+      </div>
+
+      <div class="executive-report-document" id="printableReport">
+        
+        <!-- Cabeçalho Oficial -->
+        <div class="report-header">
+          <img src="logo_sjm.png" alt="Brasão São João de Meriti" class="report-logo">
+          <div class="report-header-titles">
+            <h4 class="rep-prefeitura">ESTADO DO RIO DE JANEIRO • PREFEITURA DE SÃO JOÃO DE MERITI</h4>
+            <h2 class="rep-orgao">PROCURADORIA GERAL DO MUNICÍPIO</h2>
+            <h3 class="rep-setor">DEPARTAMENTO DE DÍVIDA ATIVA E COBRANÇA DA DÍVIDA PÚBLICA</h3>
+            <span class="rep-doc-title">RELATÓRIO EXECUTIVO DE SATISFAÇÃO DO CIDADÃO & EFICIÊNCIA OPERACIONAL (CX)</span>
+          </div>
+        </div>
+
+        <div class="report-meta-grid">
+          <div class="rep-meta-col">
+            <strong>Destinatários:</strong> Procurador-Geral do Município e Exmo. Sr. Prefeito<br>
+            <strong>Setor Responsável:</strong> Coordenação da Dívida Ativa<br>
+            <strong>Metodologia Aplicada:</strong> CSAT, FCR, Clarity Index & NLP Sentiment
+          </div>
+          <div class="rep-meta-col text-right">
+            <strong>Data de Emissão:</strong> <span id="repEmissionDate">02/10/2026</span><br>
+            <strong>Período Analisado:</strong> <span id="repAnalyzedPeriod">Últimos 30 Dias</span><br>
+            <strong>Amostragem:</strong> <span id="repSampleSize">0 avaliações</span>
+          </div>
+        </div>
+
+        <hr class="rep-divider">
+
+        <!-- Sumário Executivo / Diagnóstico -->
+        <div class="rep-section">
+          <h3 class="rep-section-title"><i class="fa-solid fa-chart-line"></i> 1. SUMÁRIO EXECUTIVO DOS INDICADORES ESTRATÉGICOS</h3>
+          <div class="rep-kpi-summary-table-wrap">
+            <table class="rep-table">
+              <thead>
+                <tr>
+                  <th>Indicador de Qualidade</th>
+                  <th>Pergunta / Dimensão</th>
+                  <th>Resultado Atual</th>
+                  <th>Meta Institucional</th>
+                  <th>Status de Conformidade</th>
+                </tr>
+              </thead>
+              <tbody id="repKpiSummaryBody">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Avaliação de Desempenho por Servidor no Relatório -->
+        <div class="rep-section">
+          <h3 class="rep-section-title"><i class="fa-solid fa-user-check"></i> 2. AVALIAÇÃO DE DESEMPENHO DOS SERVIDORES NO EXERCÍCIO DA FUNÇÃO</h3>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 12px;">Auditoria de desempenho individual dos servidores no atendimento presencial ao contribuinte, para acompanhamento de mérito, produtividade e alocação de equipe.</p>
+          <div class="rep-kpi-summary-table-wrap">
+            <table class="rep-table" id="repServantsTable">
+              <thead>
+                <tr>
+                  <th>Servidor(a) Avaliado(a)</th>
+                  <th>Volume</th>
+                  <th>CSAT (% e Média)</th>
+                  <th>Resolutividade (FCR)</th>
+                  <th>Clareza Tributária</th>
+                  <th>Agilidade</th>
+                  <th>Conceito Funcional</th>
+                </tr>
+              </thead>
+              <tbody id="repServantsTableBody">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Análise Técnica dos Resultados -->
+        <div class="rep-section">
+          <h3 class="rep-section-title"><i class="fa-solid fa-magnifying-glass-chart"></i> 3. DIAGNÓSTICO TÉCNICO E IMPACTO NA ARRECADAÇÃO</h3>
+          <div class="rep-narrative" id="repTechnicalDiagnosis">
+            <!-- Gerado dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Análise Qualitativa e Ouvidoria -->
+        <div class="rep-section">
+          <h3 class="rep-section-title"><i class="fa-solid fa-comments"></i> 4. PERCEPÇÃO DO CIDADÃO & ANÁLISE DE SENTIMENTO</h3>
+          <div class="rep-narrative" id="repSentimentDiagnosis">
+            <!-- Gerado dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Plano de Ação Recomendado -->
+        <div class="rep-section">
+          <h3 class="rep-section-title"><i class="fa-solid fa-list-check"></i> 5. RECOMENDAÇÕES ESTRATÉGICAS E PLANO DE AÇÃO</h3>
+          <div class="rep-actions-list" id="repActionPlan">
+            <!-- Gerado dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Assinaturas Formais -->
+        <div class="rep-signatures">
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <strong>Coordenação de Atendimento</strong>
+            <span>Dívida Ativa • PGM São João de Meriti</span>
+          </div>
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <strong>Procurador(a) Chefe da Dívida Ativa</strong>
+            <span>Procuradoria Geral do Município</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 4: CADASTROS OPERACIONAIS             -->
+    <!-- ========================================== -->
+    <section class="view-section" id="viewCadastros">
+      <div class="cadastros-container">
+        
+        <!-- HEADER DE CADASTROS -->
+        <div class="cadastros-header-banner">
+          <div class="cadastros-header-info">
+            <span class="cadastros-kicker"><i class="fa-solid fa-id-card-clip"></i> Dívida Ativa • Exclusivo Administrador</span>
+            <h2>Cadastros de Atendentes & Assuntos Principais</h2>
+            <p>Gerencie a equipe de servidores avaliados no exercício da função e o catálogo de serviços disponibilizados no Totem Cidadão e nos filtros do sistema. <strong>Armazenados na Planilha Google da Dívida Ativa.</strong></p>
+          </div>
+          <div class="cadastros-stats-pills">
+            <div class="stat-pill">
+              <span class="pill-number" id="countActiveAttendants">0</span>
+              <span class="pill-label">Atendentes Ativos</span>
+            </div>
+            <div class="stat-pill">
+              <span class="pill-number" id="countActiveServices">0</span>
+              <span class="pill-label">Assuntos Ativos</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BARRA DE INTEGRAÇÃO & SINCRONIZAÇÃO GOOGLE SHEETS -->
+        <div class="cadastros-cloud-bar">
+          <div class="cadastros-cloud-info">
+            <span id="cadastrosCloudBadge" class="cadastros-cloud-badge badge-synced">
+              <i class="fa-solid fa-cloud-check"></i> Planilha Google Conectada (Abas "Atendentes" & "Assuntos_Servicos")
+            </span>
+            <span class="cadastros-cloud-hint">
+              <i class="fa-solid fa-database" style="color: var(--accent-cyan);"></i> Atendentes e assuntos são persistidos diretamente na sua Planilha Google na nuvem.
+            </span>
+          </div>
+          <div class="cadastros-cloud-actions">
+            <button type="button" class="btn-sync-cloud" onclick="App.syncCadastrosFromSheets()" title="Buscar lista mais recente diretamente da Planilha Google">
+              <i class="fa-solid fa-arrows-rotate"></i> Sincronizar da Planilha
+            </button>
+            <button type="button" class="btn-upload-cloud" onclick="App.sendCadastrosToSheets()" title="Enviar cadastros locais para a Planilha Google">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Enviar Base para Planilha
+            </button>
+          </div>
+        </div>
+
+        <!-- CARD 1: ATENDENTES / SERVIDORES -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <i class="fa-solid fa-user-tie"></i>
+            <div>
+              <h3>Cadastro & Gestão de Atendentes / Servidores Públicos</h3>
+              <p>Cadastre os servidores municipais que realizam atendimento ao contribuinte. <strong>Armazenado na aba "Atendentes" da Planilha Google</strong> e vinculado às avaliações do Totem.</p>
+            </div>
+          </div>
+          <div class="config-card-body">
+            <!-- FORMULÁRIO DE CADASTRO DE ATENDENTE -->
+            <div class="cadastro-form-box">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <h4 class="cadastro-form-title" style="margin: 0;">
+                  <i class="fa-solid fa-user-plus"></i> Cadastrar Novo Atendente / Servidor
+                </h4>
+                <span style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Salva diretamente na aba "Atendentes" do Google Sheets
+                </span>
+              </div>
+              <form id="formAddAttendant" onsubmit="App.addAttendant(event)">
+                <div class="form-row" style="align-items: flex-end;">
+                  <div class="form-group col-2">
+                    <label for="inputAttendantName">Nome Completo do Servidor:</label>
+                    <input type="text" id="inputAttendantName" class="form-control" placeholder="Ex: Felipe Gonçalves da Silva" required>
+                  </div>
+                  <div class="form-group col-2">
+                    <label for="inputAttendantRole">Especialidade / Guichê / Lotação:</label>
+                    <input type="text" id="inputAttendantRole" class="form-control" placeholder="Ex: Negociação & Acordos / Guichê 03" required>
+                  </div>
+                  <div class="form-group" style="flex: 0 0 auto;">
+                    <button type="submit" class="btn-primary" style="height: 38px;">
+                      <i class="fa-solid fa-plus"></i> Cadastrar Atendente
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- TABELA DE ATENDENTES -->
+            <div class="table-responsive" style="margin-top: 18px;">
+              <table class="rep-table" style="width: 100%;">
+                <thead>
+                  <tr>
+                    <th>Nome do Atendente / Servidor</th>
+                    <th>Especialidade / Lotação</th>
+                    <th>Status no Totem</th>
+                    <th style="text-align: center;">Avaliações Computadas</th>
+                    <th style="text-align: center;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="attendantsTableBody">
+                  <!-- Preenchido dinamicamente via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: ASSUNTOS PRINCIPAIS / SERVIÇOS -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <i class="fa-solid fa-folder-open"></i>
+            <div>
+              <h3>Cadastro & Gestão de Assuntos Principais (Serviços)</h3>
+              <p>Cadastre os tipos de serviços e demandas da Dívida Ativa. <strong>Armazenado na aba "Assuntos_Servicos" da Planilha Google</strong> e disponibilizado no Totem e relatórios.</p>
+            </div>
+          </div>
+          <div class="config-card-body">
+            <!-- FORMULÁRIO DE CADASTRO DE ASSUNTO -->
+            <div class="cadastro-form-box">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <h4 class="cadastro-form-title" style="margin: 0;">
+                  <i class="fa-solid fa-folder-plus"></i> Cadastrar Novo Assunto Principal
+                </h4>
+                <span style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Salva diretamente na aba "Assuntos_Servicos" do Google Sheets
+                </span>
+              </div>
+              <form id="formAddService" onsubmit="App.addService(event)">
+                <div class="form-row" style="align-items: flex-end;">
+                  <div class="form-group col-2">
+                    <label for="inputServiceName">Descrição do Assunto / Serviço:</label>
+                    <input type="text" id="inputServiceName" class="form-control" placeholder="Ex: Prescrição de Débitos de IPTU" required>
+                  </div>
+                  <div class="form-group col-2">
+                    <label for="inputServiceCategory">Ramo Tributário / Categoria:</label>
+                    <select id="inputServiceCategory" class="form-control" required>
+                      <option value="Tributário Imobiliário">Tributário Imobiliário (IPTU, Taxas)</option>
+                      <option value="Tributário Mobiliário">Tributário Mobiliário (ISS, Alvará)</option>
+                      <option value="Arrecadação & Pagamento">Arrecadação & Pagamento (DAM, Guias)</option>
+                      <option value="Contencioso Judicial">Contencioso Judicial (Execução Fiscal, Penhoras)</option>
+                      <option value="Certidões & Regularidade">Certidões & Regularidade Fiscal</option>
+                      <option value="Atendimento Geral">Atendimento Geral & Esclarecimentos</option>
+                    </select>
+                  </div>
+                  <div class="form-group" style="flex: 0 0 auto;">
+                    <button type="submit" class="btn-primary" style="height: 38px;">
+                      <i class="fa-solid fa-plus"></i> Cadastrar Assunto
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- TABELA DE ASSUNTOS -->
+            <div class="table-responsive" style="margin-top: 18px;">
+              <table class="rep-table" style="width: 100%;">
+                <thead>
+                  <tr>
+                    <th>Assunto Principal</th>
+                    <th>Ramo / Categoria</th>
+                    <th>Status no Totem</th>
+                    <th style="text-align: center;">Avaliações Computadas</th>
+                    <th style="text-align: center;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="servicesTableBody">
+                  <!-- Preenchido dinamicamente via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 5: CONFIGURAÇÕES E INTEGRAÇÃO GOOGLE  -->
+    <!-- ========================================== -->
+    <section class="view-section" id="viewConfig">
+      <div class="config-container">
+        
+        <div class="config-card">
+          <div class="config-card-header">
+            <i class="fa-brands fa-google-drive"></i>
+            <div>
+              <h3>Integração com Google Sheets & Google Apps Script</h3>
+              <p>Conecte o sistema diretamente à sua planilha do Google para gravação em nuvem e backup automático.</p>
+            </div>
+          </div>
+          <div class="config-card-body">
+            <div class="form-group">
+              <label for="inputApiUrl"><strong>URL da Web App do Google Apps Script (Exec):</strong></label>
+              <input type="url" id="inputApiUrl" class="form-control" placeholder="https://script.google.com/macros/s/AKfycbx.../exec">
+              <small class="form-help">Cole aqui a URL gerada na implantação da Web App no Google Apps Script (veja o arquivo <code>GUIA_IMPLANTACAO.md</code>).</small>
+            </div>
+
+            <div class="config-btn-row">
+              <button type="button" class="btn-primary" onclick="App.saveConfig()">
+                <i class="fa-solid fa-floppy-disk"></i> Salvar Configurações
+              </button>
+              <button type="button" class="btn-secondary" onclick="App.testConnection()">
+                <i class="fa-solid fa-satellite-dish"></i> Testar Conexão
+              </button>
+            </div>
+
+            <!-- RESUMO DAS ABAS SINCRONIZADAS -->
+            <div style="margin-top: 18px; padding: 14px 16px; background: var(--bg-card-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--text-muted);">
+              <strong style="color: var(--text-main); display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                <i class="fa-solid fa-table-cells" style="color: var(--accent-cyan);"></i> Estrutura de Abas Armazenadas na Planilha Google:
+              </strong>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                <div style="background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                  <i class="fa-solid fa-circle-check" style="color: var(--success); margin-right: 5px;"></i>
+                  <strong style="color: var(--text-main);">Respostas_Pesquisa:</strong>
+                  <div style="font-size: 0.76rem; margin-top: 2px;">Armazena as avaliações dos munícipes.</div>
+                </div>
+                <div style="background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                  <i class="fa-solid fa-circle-check" style="color: var(--success); margin-right: 5px;"></i>
+                  <strong style="color: var(--text-main);">Metricas_Consolidadas:</strong>
+                  <div style="font-size: 0.76rem; margin-top: 2px;">Fórmulas nativas de CSAT, FCR e Agilidade.</div>
+                </div>
+                <div style="background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                  <i class="fa-solid fa-circle-check" style="color: var(--accent-cyan); margin-right: 5px;"></i>
+                  <strong style="color: var(--text-main);">Atendentes:</strong>
+                  <div style="font-size: 0.76rem; margin-top: 2px;">Cadastro da equipe de servidores da Dívida Ativa.</div>
+                </div>
+                <div style="background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                  <i class="fa-solid fa-circle-check" style="color: var(--accent-cyan); margin-right: 5px;"></i>
+                  <strong style="color: var(--text-main);">Assuntos_Servicos:</strong>
+                  <div style="font-size: 0.76rem; margin-top: 2px;">Catálogo de demandas e serviços municipais.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD: PESQUISA NO CELULAR / QR CODE INSTITUCIONAL -->
+        <div class="config-card" id="cardConfigQRCode">
+          <div class="config-card-header">
+            <i class="fa-solid fa-qrcode"></i>
+            <div>
+              <h3>Divulgação da Pesquisa Móvel (QR Code & Link Público)</h3>
+              <p>Gere e imprima o QR Code institucional para afixar nos guichês e balcões da Dívida Ativa, permitindo ao cidadão responder diretamente pelo smartphone.</p>
+            </div>
+          </div>
+          <div class="config-card-body">
+            <div class="config-qrcode-layout">
+              <div class="config-qr-preview-box">
+                <div class="config-qr-frame">
+                  <img id="configQrCodeImage" src="" alt="QR Code da Pesquisa" class="config-qr-img">
+                </div>
+                <span class="config-qr-badge"><i class="fa-solid fa-mobile-screen-button"></i> Totem Mobile Ativo</span>
+              </div>
+              
+              <div class="config-qr-info-box">
+                <div class="form-group">
+                  <label for="configDirectLinkInput"><strong>Link Público Direto (Modo Cidadão Isolado):</strong></label>
+                  <div class="config-link-input-group">
+                    <input type="text" id="configDirectLinkInput" class="form-control" readonly>
+                    <button type="button" class="btn-primary" onclick="App.copyConfigDirectLink()" title="Copiar link para a área de transferência">
+                      <i class="fa-regular fa-copy"></i> Copiar
+                    </button>
+                  </div>
+                  <small class="form-help">
+                    <i class="fa-solid fa-shield-halved"></i> Este link carrega exclusivamente o questionário com o parâmetro <code>?perfil=cidadao</code>, mantendo todos os menus e áreas restritas ocultos.
+                  </small>
+                </div>
+
+                <div class="config-qr-actions-row">
+                  <button type="button" class="btn-secondary" onclick="App.downloadQRCode()" title="Baixar imagem PNG do QR Code em alta resolução">
+                    <i class="fa-solid fa-download"></i> Baixar Imagem (PNG)
+                  </button>
+                  <button type="button" class="btn-primary" onclick="App.printQRCodeSign()" title="Imprimir Cartaz / Placa de Balcão para os Guichês em folha A4">
+                    <i class="fa-solid fa-print"></i> Imprimir Placa de Balcão (A4)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+        <div class="config-card">
+          <div class="config-card-header">
+            <i class="fa-solid fa-bullseye"></i>
+            <div>
+              <h3>Metas Institucionais de CX (SLA da Procuradoria)</h3>
+              <p>Configure as metas de qualidade apresentadas no Painel Executivo e Relatórios.</p>
+            </div>
+          </div>
+          <div class="config-card-body">
+            <div class="form-row">
+              <div class="form-group col-3">
+                <label for="metaCSAT">Meta CSAT (%):</label>
+                <input type="number" id="metaCSAT" class="form-control" value="85" min="1" max="100">
+              </div>
+              <div class="form-group col-3">
+                <label for="metaFCR">Meta FCR (%):</label>
+                <input type="number" id="metaFCR" class="form-control" value="80" min="1" max="100">
+              </div>
+              <div class="form-group col-3">
+                <label for="metaClarity">Meta Clareza (1 a 5):</label>
+                <input type="number" id="metaClarity" class="form-control" value="4.0" step="0.1" min="1" max="5">
+              </div>
+              <div class="form-group col-3">
+                <label for="metaAgility">Meta Agilidade (%):</label>
+                <input type="number" id="metaAgility" class="form-control" value="75" min="1" max="100">
+              </div>
+            </div>
+            <button type="button" class="btn-primary" onclick="App.saveGoals()">
+              <i class="fa-solid fa-check"></i> Atualizar Metas
+            </button>
+          </div>
+        </div>
+
+        <div class="config-card">
+          <div class="config-card-header">
+            <i class="fa-solid fa-users-gear"></i>
+            <div>
+              <h3>Gestão de Perfis e Credenciais de Acesso (Exclusivo Administrador)</h3>
+              <p>Administração de contas com acesso restrito (Administrador e Gestor). Todas as senhas são protegidas com criptografia SHA-256 na nuvem.</p>
+            </div>
+          </div>
+          <div class="config-card-body">
+            <!-- BARRA DE CONTROLE DA SESSÃO ATUAL -->
+            <div class="session-management-bar" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: var(--radius-md); padding: 12px 18px; margin-bottom: 20px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="fa-solid fa-shield-halved" style="color: var(--danger); font-size: 1.3rem;"></i>
+                <div>
+                  <strong style="font-size: 0.88rem; color: var(--text-main); display: block;">Sessão Administrativa Conectada</strong>
+                  <span style="font-size: 0.77rem; color: var(--text-muted);">Encerrar a sessão retorna imediatamente ao Totem Cidadão protegendo o painel.</span>
+                </div>
+              </div>
+              <button type="button" class="btn-outline-danger" onclick="App.logout()" style="white-space: nowrap; font-weight: 700;">
+                <i class="fa-solid fa-right-from-bracket"></i> Encerrar Sessão Atual (Logoff)
+              </button>
+            </div>
+
+            <!-- STATUS DA SINCRONIZAÇÃO EM NUVEM DOS USUÁRIOS -->
+            <div class="cadastros-header-actions" style="margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              <div class="cadastros-cloud-badge badge-synced" id="usersCloudBadge" style="margin-bottom: 0;">
+                <i class="fa-solid fa-shield-halved"></i> Credenciais Criptografadas (SHA-256) na Planilha Google
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-outline-primary btn-sm" onclick="App.syncUsersFromSheets()" title="Recarregar contas e credenciais direto da Planilha Google">
+                  <i class="fa-solid fa-arrows-rotate"></i> Recarregar da Nuvem
+                </button>
+              </div>
+            </div>
+
+            <!-- TABELA DE USUÁRIOS DO SISTEMA -->
+            <div class="table-responsive" style="margin-bottom: 20px;">
+              <table class="rep-table" style="width: 100%;">
+                <thead>
+                  <tr>
+                    <th>Perfil</th>
+                    <th>Usuário</th>
+                    <th>Nome / Cargo</th>
+                    <th>Nível de Acesso</th>
+                    <th>Status</th>
+                    <th style="text-align: center;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="configUsersTableBody">
+                  <!-- Preenchido via JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- FORMULÁRIO DE CADASTRO DE NOVO USUÁRIO -->
+            <div style="background: var(--bg-card-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 24px;">
+              <h4 style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-user-plus" style="color: var(--accent-cyan);"></i> Cadastrar Novo Usuário no Sistema
+              </h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">
+                O perfil Administrador pode cadastrar novos servidores para operar o sistema como <strong>Gestor</strong> ou <strong>Administrador</strong>.
+              </p>
+
+              <form id="formRegisterUser" onsubmit="App.registerNewUser(event)">
+                <div class="form-row">
+                  <div class="form-group col-3">
+                    <label for="newUserName">Nome Completo do Servidor:</label>
+                    <input type="text" id="newUserName" class="form-control" placeholder="Ex: Roberto Souza" required>
+                  </div>
+                  <div class="form-group col-3">
+                    <label for="newUserUsername">Nome de Usuário (Login):</label>
+                    <input type="text" id="newUserUsername" class="form-control" placeholder="Ex: roberto.souza" required autocomplete="off">
+                  </div>
+                  <div class="form-group col-3">
+                    <label for="newUserRole">Perfil de Acesso:</label>
+                    <select id="newUserRole" class="form-control" required>
+                      <option value="gestor">Gestor (Totem, KPIs e Relatórios)</option>
+                      <option value="admin">Administrador (Acesso Total)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row" style="align-items: flex-end;">
+                  <div class="form-group col-3">
+                    <label for="newUserCargo">Cargo / Função Administrativa:</label>
+                    <input type="text" id="newUserCargo" class="form-control" placeholder="Ex: Supervisor de Atendimento / Auditor" required>
+                  </div>
+                  <div class="form-group col-3">
+                    <label for="newUserPassword">Senha Inicial (Protegida por SHA-256):</label>
+                    <input type="password" id="newUserPassword" class="form-control" placeholder="Mínimo 4 caracteres" required autocomplete="new-password">
+                  </div>
+                  <div class="form-group col-3" style="flex: 0 0 auto;">
+                    <button type="submit" class="btn-primary" style="height: 38px; width: 100%;">
+                      <i class="fa-solid fa-user-plus"></i> Cadastrar Usuário
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
+                  <label style="display: inline-flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; color: var(--text-main); font-size: 0.85rem;">
+                    <input type="checkbox" id="newUserMustChangePassword" checked style="width: 16px; height: 16px; accent-color: var(--accent-cyan); cursor: pointer;">
+                    <span><strong>Exigir troca de senha no primeiro acesso</strong> (o servidor deverá cadastrar nova senha pessoal ao entrar)</span>
+                  </label>
+                </div>
+              </form>
+            </div>
+
+            <!-- FORMULÁRIO DE ALTERAÇÃO DE SENHA -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 18px;">
+              <h4 style="font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-key" style="color: var(--accent-cyan);"></i> Redefinir Senha de Usuário Existente
+              </h4>
+              <div class="form-row" style="align-items: flex-end; gap: 12px; margin-bottom: 8px;">
+                <div class="form-group col-3" style="min-width: 220px;">
+                  <label for="selectUserChangePwd">Selecionar Usuário:</label>
+                  <select id="selectUserChangePwd" class="form-control">
+                    <!-- Preenchido dinamicamente via JS -->
+                  </select>
+                </div>
+                <div class="form-group col-3" style="min-width: 200px;">
+                  <label for="inputNewPassword">Nova Senha (Criptografia SHA-256):</label>
+                  <input type="password" id="inputNewPassword" class="form-control" placeholder="Digite a nova senha...">
+                </div>
+                <div class="form-group col-3" style="flex: 0 0 auto;">
+                  <button type="button" class="btn-secondary" onclick="App.changeUserPassword()" style="height: 38px;">
+                    <i class="fa-solid fa-check"></i> Atualizar Senha
+                  </button>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="display: inline-flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; color: var(--text-muted); font-size: 0.82rem;">
+                  <input type="checkbox" id="resetMustChangePassword" checked style="width: 15px; height: 15px; accent-color: var(--accent-cyan); cursor: pointer;">
+                  <span>Exigir que o usuário altere esta senha no próximo login</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- RODAPÉ INSTITUCIONAL DISCRETO -->
+  <footer class="app-system-footer" id="appSystemFooter">
+    <div class="footer-credit-container">
+      <span class="footer-credit-phrase">Produzido por:</span>
+      <div class="footer-credit-badge" title="Desenvolvido por LWL Serviços">
+        <img src="logo_lwl.png" alt="LWL Serviços" class="footer-credit-logo">
+        <span class="footer-credit-name">LWL Serviços</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL: QR CODE PARA RESPONDER NO CELULAR -->
+  <div class="modal-overlay" id="qrCodeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-qrcode"></i> Avalie pelo seu Celular</h3>
+        <button type="button" class="modal-close" onclick="App.closeQRCodeModal()">&times;</button>
+      </div>
+      <div class="modal-body text-center">
+        <p>Aponte a câmera do seu celular para o QR Code abaixo para responder no seu aparelho:</p>
+        <div class="qrcode-wrapper" id="qrCodeWrapper">
+          <img id="qrCodeImage" src="" alt="QR Code da Pesquisa" class="qr-image">
+        </div>
+        <div class="direct-link-box">
+          <span class="link-label">Ou acesse pelo link público direto:</span>
+          <input type="text" id="directLinkInput" class="direct-link-input" readonly>
+          <button type="button" class="btn-copy-link" onclick="App.copyDirectLink()"><i class="fa-regular fa-copy"></i> Copiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: LOGIN / AUTENTICAÇÃO DE PERFIS -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-content auth-modal-card">
+      <div class="modal-header auth-modal-header">
+        <div class="auth-header-title">
+          <i class="fa-solid fa-shield-halved"></i>
+          <div>
+            <h3>Área Restrita da Procuradoria</h3>
+            <p>Autenticação de Gestores e Administradores da Dívida Ativa</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" onclick="App.closeLoginModal()">&times;</button>
+      </div>
+      <div class="modal-body auth-modal-body">
+        
+        <div class="citizen-notice-banner" id="loginModalNotice">
+          <i class="fa-solid fa-circle-info"></i>
+          <span id="loginModalNoticeText"><strong>Atenção Munícipe:</strong> O Cidadão <u>não precisa</u> de usuário e senha. A avaliação no Totem é pública e livre.</span>
+        </div>
+
+        <form id="loginForm" onsubmit="App.handleLogin(event)">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label for="loginUsername"><strong>Usuário:</strong></label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-user"></i>
+              <input type="text" id="loginUsername" class="form-control" placeholder="Digite seu usuário (ex: admin, gestor)..." required autocomplete="username">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label for="loginPassword"><strong>Senha de Acesso:</strong></label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-key"></i>
+              <input type="password" id="loginPassword" class="form-control" placeholder="Digite sua senha..." required autocomplete="current-password">
+              <button type="button" class="btn-toggle-password" onclick="App.togglePasswordVisibility('loginPassword', this)" title="Ver senha">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="login-feedback-error" id="loginErrorMsg" style="display: none;">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="loginErrorText">Usuário ou senha incorretos.</span>
+          </div>
+
+          <div class="auth-btn-row">
+            <button type="submit" class="btn-primary btn-submit-login">
+              <i class="fa-solid fa-right-to-bracket"></i> Acessar Sistema
+            </button>
+            <button type="button" class="btn-secondary" onclick="App.closeLoginModal()">
+              Voltar ao Totem
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PRIMEIRO ACESSO / TROCA OBRIGATÓRIA DE SENHA -->
+  <div class="modal-overlay" id="firstAccessModal">
+    <div class="modal-content auth-modal-card">
+      <div class="modal-header auth-modal-header" style="border-bottom: 2px solid var(--accent-cyan);">
+        <div class="auth-header-title">
+          <i class="fa-solid fa-key" style="color: var(--accent-cyan);"></i>
+          <div>
+            <h3>Primeiro Acesso • Troca de Senha</h3>
+            <p>Definição obrigatória de senha pessoal e confidencial</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-body auth-modal-body">
+        
+        <div class="citizen-notice-banner" style="background: rgba(14, 165, 233, 0.1); border-color: var(--accent-cyan);">
+          <i class="fa-solid fa-shield-halved" style="color: var(--accent-cyan);"></i>
+          <span><strong>Segurança Institucional:</strong> Por determinação da Procuradoria, é obrigatório redefinir a sua senha inicial antes de prosseguir.</span>
+        </div>
+
+        <div style="background: var(--bg-card-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; font-size: 0.85rem;">
+          <div>Servidor: <strong id="firstAccessUserName">-</strong></div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 3px;">
+            Usuário: <code id="firstAccessUserLogin" style="color: var(--accent-cyan);">-</code> • Perfil: <span id="firstAccessUserRole" class="role-badge badge-gestor">Gestor</span>
+          </div>
+        </div>
+
+        <form id="firstAccessForm" onsubmit="App.submitFirstAccessPassword(event)">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label for="firstAccessNewPassword"><strong>Nova Senha Pessoal:</strong></label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" id="firstAccessNewPassword" class="form-control" placeholder="Mínimo de 4 caracteres..." required autocomplete="new-password">
+              <button type="button" class="btn-toggle-password" onclick="App.togglePasswordVisibility('firstAccessNewPassword', this)" title="Ver senha">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label for="firstAccessConfirmPassword"><strong>Confirmar Nova Senha:</strong></label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" id="firstAccessConfirmPassword" class="form-control" placeholder="Repita a nova senha exatamente..." required autocomplete="new-password">
+              <button type="button" class="btn-toggle-password" onclick="App.togglePasswordVisibility('firstAccessConfirmPassword', this)" title="Ver senha">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="login-feedback-error" id="firstAccessErrorMsg" style="display: none;">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="firstAccessErrorText">As senhas não coincidem.</span>
+          </div>
+
+          <div class="auth-btn-row">
+            <button type="submit" class="btn-primary btn-submit-login">
+              <i class="fa-solid fa-check-double"></i> Salvar Nova Senha e Entrar
+            </button>
+            <button type="button" class="btn-secondary" onclick="App.cancelFirstAccess()">
+              Cancelar
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="app.js?v=4.4"></script>
+</body>
+</html>
+>
